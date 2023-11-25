@@ -1,18 +1,39 @@
-FROM python:3.8-slim AS builder
+FROM python:3.8-slim-buster AS build
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip3 install -r requirements.txt
+ARG ENV=development
+ENV ENV=${ENV} \
+    # python
+    PYTHONFAULTHANDLER=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONHASHSEED=random \
+    # pip
+    PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    # env
+    VENV_PATH="/opt/venv"
 
-COPY app.py .
+COPY . .
 
-FROM python:3.8-slim
+# Install dependencies
+RUN python -m venv ${VENV_PATH} \
+    && . /opt/venv/bin/activate \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+FROM build
+ENV ENV=development \
+    PATH="${VENV_PATH}/bin:${PATH}"
 
 WORKDIR /app
 
-COPY --from=builder /app .
+COPY --from=build $VENV_PATH $VENV_PATH
+RUN python -m venv ${VENV_PATH} \
+    && . /opt/venv/bin/activate
 
-EXPOSE 8080
+EXPOSE 5000
 
-CMD ["python3", "-m" , "flask", "run", "--host=0.0.0.0"]
+CMD ["python", "app.py"]
