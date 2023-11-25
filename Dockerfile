@@ -28,6 +28,9 @@ FROM build
 ENV ENV=development \
     PATH="${VENV_PATH}/bin:${PATH}"
 
+# Creating user to run as
+RUN adduser --disabled-password builder
+
 WORKDIR /app
 
 COPY --from=build $VENV_PATH $VENV_PATH
@@ -35,5 +38,7 @@ RUN python -m venv ${VENV_PATH} \
     && . /opt/venv/bin/activate
 
 EXPOSE 5000
+
+USER builder
 
 CMD ["python", "app.py"]
