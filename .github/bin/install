@@ -2,7 +2,7 @@
 
 # install terraform
 brew install tfenv
-tfenv install latest
+tfenv install 1.5.5
 tfenv use latest
 terraform --version
 
