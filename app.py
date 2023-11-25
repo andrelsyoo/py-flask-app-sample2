@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.route('/hello')
 def hello():
-    response_data = {"message": "Hello World!"}
+    response_data = {"message": "Hello, World!"}
     return jsonify(response_data), 200
 
 @app.route('/current_time')
