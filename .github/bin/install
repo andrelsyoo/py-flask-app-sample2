@@ -2,14 +2,11 @@
 
 # install terraform
 brew install tfenv
-tfenv install 1.5.0
-tfenv use 1.5.0
+tfenv install 1.5.5
+tfenv use 1.5.5
 terraform --version
 
 # install terraspace
 bundle install
 bundle exec terraspace new shim
 terraspace --version
-
-# install infracost
-curl -fsSL https://raw.githubusercontent.com/infracost/infracost/master/scripts/install.sh | sh
