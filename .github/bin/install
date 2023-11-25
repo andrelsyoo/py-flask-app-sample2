@@ -2,8 +2,8 @@
 
 # install terraform
 brew install tfenv
-tfenv install 1.5.5
-tfenv use 1.5.5
+tfenv install 1.5.0
+tfenv use 1.5.0
 terraform --version
 
 # install terraspace
