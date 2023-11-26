@@ -15,12 +15,30 @@
 
 #### Install Docker or any other container tool
 
+
+###### Clone that repo
 ```bash
-# Clone that repo
-$ git clone <https://github.com/andrelsyoo/py-flask-app-sample2.git>
+$ git clone https://github.com/andrelsyoo/py-flask-app-sample2.git
+```
 
-# Build the image
+###### Build the image
+```bash
 $ docker build -t my-python-app .
+```
 
-# Run the container
+###### Run the container
+```bash
 $ docker run -p 8080:8080 my-python-app
+```
+
+### How to use AWS ECR 
+
+###### Tag the image
+```bash
+$ docker tag py-flask-sample:latest {AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/py-flask-sample:latest
+```
+
+###### Push the image
+```bash
+$ docker push {AWS_ACCOUNT_ID}.dkr.ecr.us-east-2.amazonaws.com/py-flask-sample:latest
+```

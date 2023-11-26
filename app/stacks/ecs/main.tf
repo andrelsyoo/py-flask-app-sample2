@@ -16,3 +16,74 @@ module "vpc" {
     Environment = "dev"
   }
 }
+
+resource "aws_security_group" "sg" {
+  name   = "ecs-sg"
+  vpc_id = module.vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    self        = "false"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "http"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+############CREATING A ECS CLUSTER#############
+
+resource "aws_ecs_cluster" "cluster" {
+  name = "ecs-apps-cluster"
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+}
+
+resource "aws_ecs_task_definition" "task" {
+  family                   = "service"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE", "EC2"]
+  cpu                      = 512
+  memory                   = 2048
+  container_definitions    = {
+
+    py-flask-sample = {
+      cpu                    = 512
+      memory                 = 1024
+      essential              = true
+      image                  = "710886127438.dkr.ecr.us-east-2.amazonaws.com/py-flask-sample:latest"
+      firelens_configuration = {
+        type = "py-flask-sample"
+      }
+      memory_reservation = 50
+    }
+  }
+}
+
+resource "aws_ecs_service" "service" {
+  name             = "service"
+  cluster          = aws_ecs_cluster.cluster.id
+  task_definition  = aws_ecs_task_definition.task.id
+  desired_count    = 2
+  launch_type      = "FARGATE"
+  platform_version = "LATEST"
+
+  network_configuration {
+    assign_public_ip = false
+    security_groups  = [aws_security_group.sg.id]
+    subnets          = module.vpc.private_subnets
+  }
+  lifecycle {
+    ignore_changes = [task_definition]
+  }
+}
+
