@@ -19,7 +19,7 @@ module "vpc" {
 
 resource "aws_security_group" "sg" {
   name   = "ecs-sg"
-  vpc_id = module.vpc.id
+  vpc_id = module.vpc.name
 
   ingress {
     from_port   = 80
@@ -54,19 +54,23 @@ resource "aws_ecs_task_definition" "task" {
   requires_compatibilities = ["FARGATE", "EC2"]
   cpu                      = 512
   memory                   = 2048
-  container_definitions    = {
-
-    py-flask-sample = {
-      cpu                    = 512
-      memory                 = 1024
-      essential              = true
-      image                  = "710886127438.dkr.ecr.us-east-2.amazonaws.com/py-flask-sample:latest"
-      firelens_configuration = {
-        type = "py-flask-sample"
-      }
-      memory_reservation = 50
+  container_definitions    = <<DEFINITION
+  [
+    {
+      "name"      : "py-flask-sample",
+      "image"     : "710886127438.dkr.ecr.us-east-2.amazonaws.com/py-flask-sample:latest",
+      "cpu"       : 512,
+      "memory"    : 2048,
+      "essential" : true,
+      "portMappings" : [
+        {
+          "containerPort" : 80,
+          "hostPort"      : 80
+        }
+      ]
     }
-  }
+  ]
+  DEFINITION
 }
 
 resource "aws_ecs_service" "service" {
