@@ -38,6 +38,59 @@ resource "aws_security_group" "sg" {
   }
 }
 
+resource "aws_alb" "app_load_balancer" {
+  name               = "app-alb"
+  internal           = false
+  load_balancer_type = "application"
+  subnets            = module.vpc.public_subnets
+  security_groups    = [aws_security_group.sg.id]
+
+  tags = {
+    Terraform = "true"
+    Environment = "dev"
+  }
+}
+
+resource "aws_lb_target_group" "app_alb_tg" {
+  name        = "app-alb-tg"
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = module.vpc.name
+
+  health_check {
+    healthy_threshold   = "3"
+    interval            = "300"
+    protocol            = "HTTP"
+    matcher             = "200"
+    timeout             = "3"
+    path                = "/v1/status"
+    unhealthy_threshold = "2"
+  }
+
+  tags = {
+    Terraform = "true"
+    Environment = "dev"
+  }
+}
+
+resource "aws_lb_listener" "listener" {
+  load_balancer_arn = aws_alb.app_load_balancer.id
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+
 ############CREATING A ECS CLUSTER#############
 
 resource "aws_ecs_cluster" "cluster" {
@@ -86,6 +139,13 @@ resource "aws_ecs_service" "service" {
     security_groups  = [aws_security_group.sg.id]
     subnets          = module.vpc.private_subnets
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app_alb_tg.arn
+    container_name   = "app-py"
+    container_port   = 8080
+  }
+
   lifecycle {
     ignore_changes = [task_definition]
   }
